@@ -1422,8 +1422,9 @@ class DistillationPipeline(TrainingPipeline):
                 self.tracker.log(log_data, step)
 
             # Save training state checkpoint (for resuming training)
-            if (self.training_args.training_state_checkpointing_steps > 0
-                    and step % self.training_args.training_state_checkpointing_steps == 0):
+            _ckpt_steps = self.training_args.training_state_checkpointing_steps or 0
+            if (_ckpt_steps > 0
+                    and step % _ckpt_steps == 0):
                 print("rank", self.global_rank, "save training state checkpoint at step", step)
                 save_distillation_checkpoint(
                     self.transformer,
@@ -1453,8 +1454,9 @@ class DistillationPipeline(TrainingPipeline):
                 self.sp_group.barrier()
 
             # Save weight-only checkpoint
-            if (self.training_args.weight_only_checkpointing_steps > 0
-                    and step % self.training_args.weight_only_checkpointing_steps == 0):
+            _wonly_steps = self.training_args.weight_only_checkpointing_steps or 0
+            if (_wonly_steps > 0
+                    and step % _wonly_steps == 0):
                 print("rank", self.global_rank, "save weight-only checkpoint at step", step)
                 save_distillation_checkpoint(
                     self.transformer,
