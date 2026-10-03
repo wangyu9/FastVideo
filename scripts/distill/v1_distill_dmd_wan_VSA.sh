@@ -2,6 +2,7 @@ export WANDB_BASE_URL="https://api.wandb.ai"
 export WANDB_MODE=offline
 export WANDB_API_KEY=
 export TRITON_CACHE_DIR=/tmp/triton_cache
+export TORCH_NCCL_ENABLE_MONITORING=0
 DATA_DIR=mini_i2v_dataset/crush-smol_preprocessed/combined_parquet_dataset/
 VALIDATION_DIR=mini_i2v_dataset/crush-smol_raw/validation.json
 NUM_GPUS=8
@@ -58,4 +59,5 @@ torchrun --nnodes 1 --nproc_per_node $NUM_GPUS \
     --max_timestep_ratio 0.98 \
     --real_score_guidance_scale 3.5 \
     --seed 1024 \
-    --VSA_sparsity 0.8 
+    --VSA_sparsity 0.8 \
+    --enable_gradient_checkpointing_type full
