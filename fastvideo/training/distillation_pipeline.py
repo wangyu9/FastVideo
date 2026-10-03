@@ -723,8 +723,15 @@ class DistillationPipeline(TrainingPipeline):
                 foreach=None,
             )
             if grad_norm is not None:
-                assert torch.isfinite(grad_norm), (f"grad_norm is not finite: {grad_norm}")
-                grad_norm = grad_norm.item()
+                if not torch.isfinite(grad_norm):
+                    logger.warning(f"grad_norm is not finite: {grad_norm} — skipping param update for this step")
+                    for m in model_parts:
+                        for p in m.parameters():
+                            if p.grad is not None:
+                                p.grad = None
+                    grad_norm = 0.0
+                else:
+                    grad_norm = grad_norm.item()
             else:
                 grad_norm = 0.0
         else:
