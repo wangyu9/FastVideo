@@ -258,8 +258,22 @@ class VideoTransformStage(DatasetStage):
         assert os.path.exists(batch.path), f"file {batch.path} do not exist!"
         assert batch.sample_frame_index is not None, "Frame indices must be set before transformation"
 
-        torchvision_video, _, metadata = torchvision.io.read_video(batch.path, output_format="TCHW")
-        video = torchvision_video[batch.sample_frame_index]
+        # torchvision.io.read_video was removed in torchvision 0.21+; decode only needed frames.
+        # Decode all frames sequentially but keep only the ones in sample_frame_index,
+        # avoiding accumulating the full video in memory.
+        import av as _av
+        needed = set(batch.sample_frame_index)
+        max_needed = max(needed)
+        _frame_map: dict[int, torch.Tensor] = {}
+        with _av.open(batch.path) as _container:
+            _stream = _container.streams.video[0]
+            for _i, _f in enumerate(_container.decode(_stream)):
+                if _i in needed:
+                    _frame_map[_i] = torch.from_numpy(_f.to_ndarray(format="rgb24"))
+                if _i >= max_needed:
+                    break
+        # stack in index order → (T, H, W, C) → (T, C, H, W)
+        video = torch.stack([_frame_map[i] for i in batch.sample_frame_index]).permute(0, 3, 1, 2)
         if self.transform is not None:
             video = self.transform(video)
         video = rearrange(video, "t c h w -> c t h w")
