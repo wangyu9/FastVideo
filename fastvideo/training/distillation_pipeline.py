@@ -677,6 +677,10 @@ class DistillationPipeline(TrainingPipeline):
             else:
                 generator_pred_video = self._generator_forward(training_batch)
 
+        if not torch.isfinite(generator_pred_video).all():
+            logger.warning(f"faker_score_forward: generator_pred_video has non-finite values (likely VSA nan); replacing with zeros")
+            generator_pred_video = torch.nan_to_num(generator_pred_video, nan=0.0, posinf=1.0, neginf=-1.0)
+
         fake_score_timestep = torch.randint(0, self.num_train_timestep, [1], device=self.device, dtype=torch.long)
 
         fake_score_timestep = shift_timestep(

@@ -6,7 +6,9 @@ export TORCH_NCCL_ENABLE_MONITORING=0
 DATA_DIR=mini_i2v_dataset/crush-smol_preprocessed/combined_parquet_dataset/
 VALIDATION_DIR=mini_i2v_dataset/crush-smol_raw/validation.json
 NUM_GPUS=8
-export FASTVIDEO_ATTENTION_BACKEND=VIDEO_SPARSE_ATTN
+# VIDEO_SPARSE_ATTN produces nan gradients during training; use FLASH_ATTN for training.
+# VSA can still be set for inference by overriding this env var.
+export FASTVIDEO_ATTENTION_BACKEND=FLASH_ATTN
 export TOKENIZERS_PARALLELISM=false
 
 # Train generator with VSA
