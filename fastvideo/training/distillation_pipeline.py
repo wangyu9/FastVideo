@@ -701,7 +701,7 @@ class DistillationPipeline(TrainingPipeline):
             fake_score_pred_noise = current_fake_score_transformer(**training_batch.input_kwargs).permute(0, 2, 1, 3, 4)
 
         target = fake_score_noise - generator_pred_video
-        flow_matching_loss = torch.mean((fake_score_pred_noise - target)**2)
+        flow_matching_loss = torch.mean((fake_score_pred_noise.float() - target.float())**2)
 
         training_batch.fake_score_latent_vis_dict = {
             "training_batch_fakerscore_fwd_clean_latent": training_batch.latents,
